@@ -3,19 +3,21 @@ project:
   output-dir: docs
 
 website:
-  title: "Ramdhan Hidayat"
+  title: "Ramdhan's Blog"
   navbar:
     right:
-      - about.qmd
+      - text: About Me
+        href: about.qmd    
       - icon: github
         href: https://github.com/
       - icon: twitter
         href: https://twitter.com
+    
 format:
   html:
     theme: 
-      light: lux
-      dark: darkly
+      light: flatly
+      dark: superhero
     css: styles.css
     code-fold: true
     code-link: true
