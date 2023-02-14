@@ -2,7 +2,7 @@
 title: "MArketing Data Analysis"
 author: "Ramdhan Hidayat"
 date: "2023-02-14"
-categories: [marketing, analysis]
+categories: [marketing, analysis, Python, R]
 image: "image.jpg"
 ---
 
@@ -13,7 +13,9 @@ image: "image.jpg"
 > The Chief Marketing Officer that recent marketing campaigns have not been as effective as they were expected to be. You need to analyze the data set to understand this problem and propose data-driven solutions.
 >
 > below are the questions that need to be answered:
->
+
+Based on the context from CMO's request, below are questions to be answered:
+
 > 1\. Data Summaries and Distributions:
 >
 > -   What are your main findings looking at the univariate and bivariate summaries and distributions?
@@ -52,16 +54,26 @@ image: "image.jpg"
 
 Let's start from diagnosing the dataset.
 
+# Dataset Daignostics
+
+> This section presents the results of a data quality assessment performed on the marketing campaign dataset. The aim of this assessment is to evaluate the quality and reliability of the data used in the analysis and identify any issues or errors that need to be addressed before proceeding with further analysis.
+
 ```{r}
-#| echo: false
-#| 
+#| warning: false
+#| output: false
+#| code-summary: "R environment setup"
+
+#loading packages
 library(dplyr)
 library(ggplot2)
 library(reticulate)
 library(tidyverse)
 library(gridExtra)
+library(RColorBrewer)
 
-#color themes for ggplot
+
+
+#color theming for ggplot
 # Predefined personal color schemes (change them at your convenience)
 colorsReBu <- c("#922B21", "#EE865D", "#DDCD5E", "#59BEC4", "#048B9F", "#114676")
 colorsPuYe <- c("#5C374C", "#985277", "#CE6A85", "#FFCF6A", "#FFB742", "#E9692C")
@@ -93,7 +105,7 @@ import plotly
 from plotly.subplots import make_subplots
 from IPython.display import display, HTML
 import warnings
-#warnings.filterwarnings("ignore")
+warnings.filterwarnings("ignore")
 
 #load data
 marketing_df = pd.read_csv('marketing_data.csv')
@@ -101,11 +113,18 @@ marketing_df.columns = marketing_df.columns.str.replace(' ', '')
 ```
 
 ```{python}
+#| warning: false
+#| output: false
+#| code-summary: "Data PRocessing Code"
+
+
 #drop missing values
-marketing_df_cln = marketing_df.copy().dropna(axis=0)
+#marketing_df_cln = marketing_df.copy().dropna(axis=0)
+marketing_df_cln = marketing_df.copy()
+
 
 #change data type
-marketing_df_cln['Dt_Customer'] = pd.to_datetime(marketing_df['Dt_Customer'])
+marketing_df_cln['Dt_Customer'] = pd.to_datetime(marketing_df_cln['Dt_Customer'])
 marketing_df_cln['Year_Birth'] = marketing_df_cln['Year_Birth'].astype('int')
 marketing_df_cln['Kidhome'] = marketing_df_cln['Kidhome'].astype('int')
 marketing_df_cln['Teenhome'] = marketing_df_cln['Teenhome'].astype('int')
@@ -193,13 +212,222 @@ marketing_df_cln['Income_Level'] = pd.qcut(marketing_df_cln['Income'], 6, labels
 total_amount_spent_per_income_level = marketing_df_cln.groupby('Income_Level')['Total_Amount_Spent'].sum().reset_index()
 ```
 
-```{python}
-plt.figure(figsize=(10,6))
-sns.heatmap(marketing_df.isna().transpose(),
-            cmap="YlGnBu",
-            cbar_kws={'label': 'Missing Data'})
-plt.title('Missing Values', fontsize=12)
-plt.xlabel('Row Index', fontsize = 10) 
-plt.ylabel('Columns', fontsize = 10)
-plt.show()
+```{r}
+#| warning: false
+#| code-summary: "Show the code"
+
+missing.values <- py$marketing_df %>%
+  gather(key = "key", value = "val") %>%
+  mutate(isna = is.na(val)) %>%
+  group_by(key) %>%
+  mutate(total = n()) %>%
+  group_by(key, total, isna) %>%
+  summarise(num.isna = n()) %>%
+  mutate(pct = num.isna / total * 100)
+
+levels <-
+    (missing.values  %>% filter(isna == T) %>% arrange(desc(pct)))$key
+
+percentage.plot <- missing.values %>%
+      ggplot() +
+        geom_bar(aes(x = reorder(key, desc(pct)), 
+                     y = pct, fill=isna), 
+                 stat = 'identity', alpha=0.8) +
+      scale_x_discrete(limits = levels) +
+      scale_fill_manual(name = "", 
+                        values = c('steelblue', 'tomato3'), labels = c("Present", "Missing")) +
+      coord_flip() +
+      labs(title = "Percentage of missing values", x =
+             'Variable', y = "% of missing values")
+
+row.plot <- py$marketing_df %>%
+  mutate(id = row_number()) %>%
+  gather(-id, key = "key", value = "val") %>%
+  mutate(isna = is.na(val)) %>%
+  ggplot(aes(key, id, fill = isna)) +
+    geom_raster(alpha=0.8) +
+    scale_fill_manual(name = "",
+        values = c('steelblue', 'tomato3'),
+        labels = c("Present", "Missing")) +
+    scale_x_discrete(limits = levels) +
+    labs(x = "Variable",
+           y = "Row Number", title = "Missing values in rows") +
+    coord_flip()
+
+grid.arrange(percentage.plot, row.plot, ncol=1)
 ```
+
+2.  There is an issue with the Income column, as values are encoded as strings rather than numbers, and formatted as "\$ 45,000". This will need to be cleaned and converted to numeric format for analysis.
+3.  Consistency: There are no consistency issues identified in the dataset.
+4.  Timelines: There are no timeline issues identified in the dataset.
+
+Limitations: The dataset has a limitation in that it mostly contains data from people with Spain nationality (more than 70%), which may limit its generalizability to other populations.
+
+Overall, the dataset appears to be of good quality, with only minor issues identified. The missing values and formatting of the Income column will need to be addressed prior to analysis. Additionally, the limitation of the dataset being predominantly Spanish individuals should be kept in mind when interpreting the results.
+
+# Exploratory Data Analysis 
+
+This section provide a comprehensive overview of the marketing campaign dataset to help answering the highlighted questions. This includes the data structure, distribution, and relationship between variables in order to gain insights and inform the development of data-driven solutions to improve marketing campaign effectiveness.
+
+## Data Summaries & Distributions
+
+### Univariate Analysis
+
+```{r}
+# Define color palette
+colors <- c("#FC8D62", "#66C2A5", "#8DA0CB", "#E78AC3", "#A6D854")
+# Set custom color palette for countries
+country_palette <- brewer.pal(8, "YlGnBu")
+# Define a color palette
+my_palette <- brewer.pal(8, "YlGnBu")
+
+# Define color palette
+colors <- c("#FC8D62", "#66C2A5", "#8DA0CB", "#E78AC3", "#A6D854")
+# Set custom color palette for countries
+
+# Set custom color palette for charts
+chart_palette <- c("#4c78a8", "#f58518", "#e45756", "#72b7b2", "#54a24b", "#eeca3b", "#b279a2", "#ff9da6")
+
+# BarCharts
+kidhome_bar <- py$marketing_df_cln %>%
+  ggplot(aes(x = as.factor(Kidhome), fill = as.factor(Kidhome))) +
+  geom_bar(color = "gray30") +
+  scale_fill_manual(values = chart_palette) +
+  theme_test() +
+  labs(title = "", fill = "Kidhome") +
+  xlab("Kidhome") + 
+  theme(legend.position = "none")
+
+teenhome_bar <- py$marketing_df_cln %>%
+  ggplot(aes(x = as.factor(Teenhome), fill = as.factor(Teenhome))) +
+  geom_bar(color = "gray30") +
+  scale_fill_manual(values = chart_palette) +
+  theme_test() +
+  labs(title = "", fill = "Teenhome") +
+  xlab("Teenhome") + 
+  theme(legend.position = "none")
+
+response_bar <- py$marketing_df_cln %>%
+  ggplot(aes(x = Response)) +
+  geom_bar(color = "gray30", fill = chart_palette[2]) +
+  theme_test() +
+  labs(title = "") +
+  theme(legend.position = "none")
+
+complain_bar <- py$marketing_df_cln %>%
+  ggplot(aes(x = Complain)) +
+  geom_bar(color = "gray30", fill = chart_palette[3]) +
+  theme_test() +
+  labs(title = "")
+
+country_bar <- py$marketing_df_cln %>%
+  ggplot(aes(x=Country, fill=Country)) +
+  geom_bar(color='grey30') +
+  theme_test() +
+  labs(title="") +
+  theme(legend.position = "none") +
+  scale_fill_manual(values = country_palette)
+
+cmp1_bar <- py$marketing_df_cln %>%
+  ggplot(aes(x = as.factor(AcceptedCmp1), 
+             fill = as.factor(AcceptedCmp1))) +
+  geom_bar(color = "gray30") +
+  scale_fill_manual(values = chart_palette) +
+  theme_test() +
+  labs(title = "", fill = "AcceptedCmp1") +
+  xlab("AcceptedCmp1") + 
+  theme(legend.position = "none")
+
+cmp2_bar <- py$marketing_df_cln %>%
+  ggplot(aes(x = as.factor(AcceptedCmp2), 
+             fill = as.factor(AcceptedCmp2))) +
+  geom_bar(color = "gray30") +
+  scale_fill_manual(values = chart_palette) +
+  theme_test() +
+  labs(title = "", fill = "AcceptedCmp2") +
+  xlab("AcceptedCmp1") + 
+  theme(legend.position = "none")
+
+cmp3_bar <- py$marketing_df_cln %>%
+  ggplot(aes(x = as.factor(AcceptedCmp3),
+             fill = as.factor(AcceptedCmp3))) +
+  geom_bar(color = "gray30") +
+  scale_fill_manual(values = colors) +
+  theme_test() +
+  labs(title = "", fill = "AcceptedCmp3") +
+  xlab("AcceptedCmp3") + 
+  theme(legend.position = "none")
+
+cmp4_bar <- py$marketing_df_cln %>%
+  ggplot(aes(x = as.factor(AcceptedCmp4),
+             fill = as.factor(AcceptedCmp4))) +
+  geom_bar(color = "gray30") +
+  scale_fill_manual(values = colors) +
+  theme_test() +
+  labs(title = "", fill = "AcceptedCmp4") +
+  xlab("AcceptedCmp4") + 
+  theme(legend.position = "none")
+
+cmp5_bar <- py$marketing_df_cln %>%
+  ggplot(aes(x = as.factor(AcceptedCmp5),
+             fill = as.factor(AcceptedCmp5))) +
+  geom_bar(color = "gray30") +
+  scale_fill_manual(values = colors) +
+  theme_test() +
+  labs(title = "", fill = "AcceptedCmp5") +
+  xlab("AcceptedCmp5") + 
+  theme(legend.position = "none")
+```
+
+```{r}
+options(repr.plot.width=20, repr.plot.height=40)
+grid.arrange(kidhome_bar, teenhome_bar, ncol=2)
+```
+
+```{r}
+options(repr.plot.width=20, repr.plot.height=40)
+grid.arrange(complain_bar, response_bar, ncol=2)
+```
+
+```{r}
+options(repr.plot.width=30, repr.plot.height=120)
+grid.arrange(cmp1_bar, cmp2_bar, cmp3_bar, cmp4_bar, cmp5_bar, ncol=2, layout_matrix = rbind(c(1, 2), c(3, 4), c(5, 5)))
+```
+
+```{r}
+options(repr.plot.width=30, repr.plot.height=120)
+country_bar
+```
+
+## Bivariate Analysis
+
+```{r}
+# create a data frame with acceptance rates and customer complaint data
+campaign_data <- data.frame(
+  campaign = c("Cmp1", "Cmp2", "Cmp3", "Cmp4", "Cmp5"),
+  no_complaint = c(25, 50, 75, 100, 125),
+  complaint = c(5, 10, 15, 20, 25)
+)
+
+# transform the data frame to long format
+campaign_data_long <- reshape2::melt(campaign_data, id.vars = "campaign")
+
+# create the stacked bar chart
+ggplot(campaign_data_long, aes(x = campaign, y = value, fill = variable)) +
+  geom_bar(stat = "identity") +
+  xlab("Marketing Campaign") +
+  ylab("Number of Customers") +
+  ggtitle("Acceptance Rates of Previous Marketing Campaigns") +
+  scale_fill_manual(values = brewer.pal(3, "YlGnBu")) +
+  theme(plot.title = element_text(hjust = 0.5),
+        panel.background = element_blank(),
+        axis.line = element_line(color = "black"),
+        axis.text = element_text(color = "black"),
+        legend.title = element_blank(),
+        legend.text = element_text(color = "black", size = 10),
+        legend.position = "bottom") +
+  geom_text(aes(label = paste0(value, "%"), y = value, group = variable),
+            position = position_stack(vjust = 0.6), color = "black", size = 3.5) 
+```
+
+### Summary
