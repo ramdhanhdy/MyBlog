@@ -71,8 +71,6 @@ library(tidyverse)
 library(gridExtra)
 library(RColorBrewer)
 
-
-
 #color theming for ggplot
 # Predefined personal color schemes (change them at your convenience)
 colorsReBu <- c("#922B21", "#EE865D", "#DDCD5E", "#59BEC4", "#048B9F", "#114676")
@@ -94,6 +92,8 @@ my_theme <- theme(
 ```
 
 ```{python}
+#| code-summary: "Python environment setup"
+
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -115,8 +115,7 @@ marketing_df.columns = marketing_df.columns.str.replace(' ', '')
 ```{python}
 #| warning: false
 #| output: false
-#| code-summary: "Data PRocessing Code"
-
+#| code-summary: "Data Processing Code"
 
 #drop missing values
 #marketing_df_cln = marketing_df.copy().dropna(axis=0)
@@ -402,6 +401,7 @@ country_bar
 ## Bivariate Analysis
 
 ```{r}
+#| warning: false
 # create a data frame with acceptance rates and customer complaint data
 campaign_data <- data.frame(
   campaign = c("Cmp1", "Cmp2", "Cmp3", "Cmp4", "Cmp5"),

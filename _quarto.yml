@@ -14,7 +14,7 @@ website:
 format:
   html:
     theme: 
-      light: journal
+      light: lux
       dark: darkly
     css: styles.css
     code-fold: true

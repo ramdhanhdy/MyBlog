@@ -11,7 +11,7 @@
     "href": "index.html",
     "title": "MyBlog",
     "section": "",
-    "text": "MArketing Data Analysis\n\n\n\n\n\n\n\nmarketing\n\n\nanalysis\n\n\nPython\n\n\nR\n\n\n\n\n\n\n\n\n\n\n\nFeb 14, 2023\n\n\nRamdhan Hidayat\n\n\n\n\n\n\n  \n\n\n\n\nPost With Code\n\n\n\n\n\n\n\nnews\n\n\ncode\n\n\nanalysis\n\n\n\n\n\n\n\n\n\n\n\nFeb 14, 2023\n\n\nHarlow Malloc\n\n\n\n\n\n\n  \n\n\n\n\nWelcome To My Blog\n\n\n\n\n\n\n\nnews\n\n\n\n\n\n\n\n\n\n\n\nFeb 11, 2023\n\n\nTristan O’Malley\n\n\n\n\n\n\nNo matching items"
+    "text": "MArketing Data Analysis\n\n\n\n\n\n\n\nmarketing\n\n\nanalysis\n\n\nPython\n\n\nR\n\n\n\n\n\n\n\n\n\n\n\nFeb 14, 2023\n\n\nRamdhan Hidayat\n\n\n\n\n\n\nNo matching items"
   },
   {
     "objectID": "posts/marketing_analytics/index.html",
@@ -19,20 +19,6 @@
     "title": "MArketing Data Analysis",
     "section": "",
     "text": "The Chief Marketing Officer that recent marketing campaigns have not been as effective as they were expected to be. You need to analyze the data set to understand this problem and propose data-driven solutions.\nbelow are the questions that need to be answered:\n\nBased on the context from CMO’s request, below are questions to be answered:\n\n1. Data Summaries and Distributions:\n\nWhat are your main findings looking at the univariate and bivariate summaries and distributions?\nDo you notice any patterns or anomalies in the data? Can you plot them?\n\n\nCharacteristics Customers:\n\n\nAre there any useful variables that you can engineer with the given data?\nWhat does the average customer look like for this company?\n\n3. Product Performance:\n\nWhich products are performing best?\nWhich products are performing worst?\n\n4. Factors that Influence Purchases:\n\nWhat factors are significantly related to the number of store purchases?\nDoes US fare significantly better than the Rest of the World in terms of total purchases?\nYour supervisor insists that people who buy gold are more conservative. Therefore, people who spent an above average amount on gold in the last 2 years would have more in store purchases. Justify or refute this statement using an appropriate statistical test.\n\n5. Campaign Performance:\n\nIs there a significant relationship between geographical regional and success of a campaign?\nWhich marketing campaign is most successful?\nWhich products are performing best?\nWhich channels are underperforming?\n\n\nLet’s start from diagnosing the dataset."
-  },
-  {
-    "objectID": "posts/post-with-code/index.html",
-    "href": "posts/post-with-code/index.html",
-    "title": "Post With Code",
-    "section": "",
-    "text": "This is a post with executable code.\n\n\nCode\n1 + 1\n\n\n[1] 2"
-  },
-  {
-    "objectID": "posts/welcome/index.html",
-    "href": "posts/welcome/index.html",
-    "title": "Welcome To My Blog",
-    "section": "",
-    "text": "This is the first post in a Quarto blog. Welcome!\n\nSince this post doesn’t specify an explicit image, the first image in the post will be used in the listing page of posts."
   },
   {
     "objectID": "posts/marketing_analytics/index.html#data-summaries-distributions",
@@ -46,6 +32,6 @@
     "href": "posts/marketing_analytics/index.html#bivariate-analysis",
     "title": "MArketing Data Analysis",
     "section": "Bivariate Analysis",
-    "text": "Bivariate Analysis\n\n\nCode\n# create a data frame with acceptance rates and customer complaint data\ncampaign_data <- data.frame(\n  campaign = c(\"Cmp1\", \"Cmp2\", \"Cmp3\", \"Cmp4\", \"Cmp5\"),\n  no_complaint = c(25, 50, 75, 100, 125),\n  complaint = c(5, 10, 15, 20, 25)\n)\n\n# transform the data frame to long format\ncampaign_data_long <- reshape2::melt(campaign_data, id.vars = \"campaign\")\n\n# create the stacked bar chart\nggplot(campaign_data_long, aes(x = campaign, y = value, fill = variable)) +\n  geom_bar(stat = \"identity\") +\n  xlab(\"Marketing Campaign\") +\n  ylab(\"Number of Customers\") +\n  ggtitle(\"Acceptance Rates of Previous Marketing Campaigns\") +\n  scale_fill_manual(values = brewer.pal(2, \"YlGnBu\")) +\n  theme(plot.title = element_text(hjust = 0.5),\n        panel.background = element_blank(),\n        axis.line = element_line(color = \"black\"),\n        axis.text = element_text(color = \"black\"),\n        legend.title = element_blank(),\n        legend.text = element_text(color = \"black\", size = 10),\n        legend.position = \"bottom\") +\n  geom_text(aes(label = paste0(value, \"%\"), y = value, group = variable),\n            position = position_stack(vjust = 0.6), color = \"black\", size = 3.5) \n\n\nWarning in brewer.pal(2, \"YlGnBu\"): minimal value for n is 3, returning requested palette with 3 different levels\n\n\n\n\n\n\nSummary\n\nData Summaries and Distributions:\n\nWhat are your main findings looking at the univariate and bivariate summaries and distributions?\nDo you notice any patterns or anomalies in the data? Can you plot them?"
+    "text": "Bivariate Analysis\n\n\nCode\n# create a data frame with acceptance rates and customer complaint data\ncampaign_data <- data.frame(\n  campaign = c(\"Cmp1\", \"Cmp2\", \"Cmp3\", \"Cmp4\", \"Cmp5\"),\n  no_complaint = c(25, 50, 75, 100, 125),\n  complaint = c(5, 10, 15, 20, 25)\n)\n\n# transform the data frame to long format\ncampaign_data_long <- reshape2::melt(campaign_data, id.vars = \"campaign\")\n\n# create the stacked bar chart\nggplot(campaign_data_long, aes(x = campaign, y = value, fill = variable)) +\n  geom_bar(stat = \"identity\") +\n  xlab(\"Marketing Campaign\") +\n  ylab(\"Number of Customers\") +\n  ggtitle(\"Acceptance Rates of Previous Marketing Campaigns\") +\n  scale_fill_manual(values = brewer.pal(3, \"YlGnBu\")) +\n  theme(plot.title = element_text(hjust = 0.5),\n        panel.background = element_blank(),\n        axis.line = element_line(color = \"black\"),\n        axis.text = element_text(color = \"black\"),\n        legend.title = element_blank(),\n        legend.text = element_text(color = \"black\", size = 10),\n        legend.position = \"bottom\") +\n  geom_text(aes(label = paste0(value, \"%\"), y = value, group = variable),\n            position = position_stack(vjust = 0.6), color = \"black\", size = 3.5) \n\n\n\n\n\n\nSummary"
   }
 ]
