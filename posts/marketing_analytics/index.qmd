@@ -1,0 +1,205 @@
+---
+title: "Post With Code"
+author: "Ramdhan Hidayat"
+date: "2023-02-14"
+categories: [marketing, analysis]
+image: "image.jpg"
+---
+
+# **Introduction**
+
+## Problem Background
+
+> The Chief Marketing Officer that recent marketing campaigns have not been as effective as they were expected to be. You need to analyze the data set to understand this problem and propose data-driven solutions.
+>
+> below are the questions that need to be answered:
+>
+> 1\. Data Summaries and Distributions:
+>
+> -   What are your main findings looking at the univariate and bivariate summaries and distributions?
+>
+> -   Do you notice any patterns or anomalies in the data? Can you plot them?
+>
+> 2.  Characteristics Customers:
+>
+> -   Are there any useful variables that you can engineer with the given data?
+>
+> -   What does the average customer look like for this company?
+>
+> 3\. Product Performance:
+>
+> -   Which products are performing best?
+>
+> -   Which products are performing worst?
+>
+> 4\. Factors that Influence Purchases:
+>
+> -   What factors are significantly related to the number of store purchases?
+>
+> -   Does US fare significantly better than the Rest of the World in terms of total purchases?
+>
+> -   Your supervisor insists that people who buy gold are more conservative. Therefore, people who spent an above average amount on gold in the last 2 years would have more in store purchases. Justify or refute this statement using an appropriate statistical test.
+>
+> 5\. Campaign Performance:
+>
+> -   Is there a significant relationship between geographical regional and success of a campaign?
+>
+> -   Which marketing campaign is most successful?
+>
+> -   Which products are performing best?
+>
+> -   Which channels are underperforming?
+
+Let's start from diagnosing the dataset.
+
+```{r}
+#| echo: false
+#| 
+library(dplyr)
+library(ggplot2)
+library(reticulate)
+library(tidyverse)
+library(gridExtra)
+
+#color themes for ggplot
+# Predefined personal color schemes (change them at your convenience)
+colorsReBu <- c("#922B21", "#EE865D", "#DDCD5E", "#59BEC4", "#048B9F", "#114676")
+colorsPuYe <- c("#5C374C", "#985277", "#CE6A85", "#FFCF6A", "#FFB742", "#E9692C")
+colorsEarth <- c("#DA4511", "#FFBD00", "#6A953F", "#9A6233", "#D3AE7C", "#307CA1")
+colorsRainbow <- c("#FF8EC8", "#FFDF51", "#46DBDF", "#FF8F46", "#42BAB7", "#DB0000")
+colorsPastels <- c("#FA6E4F", "#F2CF59", "#FB8E7E", "#C5D7C0", "#8EC9BB", "#F8CA9D")
+
+my_theme <- theme(
+        text = element_text(color = "grey35"),
+        plot.title = element_text(size = 10, face = "bold"),
+        axis.title = element_text(size = 12),
+        axis.text = element_text(size = 12),
+        axis.line = element_line(linewidth = 1.2, color = "grey35"),
+        legend.box.background = element_rect(color = "grey75", size = 1),
+        legend.box.margin = margin(t = 5, r = 5, b = 5, l = 5),
+        legend.title = element_text(face = "bold", size = 12),
+        legend.text = element_text(size=11))
+```
+
+```{python}
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+import matplotlib.ticker as plticker
+from matplotlib import cm
+import plotly.graph_objs as go
+import plotly
+from plotly.subplots import make_subplots
+from IPython.display import display, HTML
+import warnings
+#warnings.filterwarnings("ignore")
+
+#load data
+marketing_df = pd.read_csv('marketing_data.csv')
+marketing_df.columns = marketing_df.columns.str.replace(' ', '')
+```
+
+```{python}
+#drop missing values
+marketing_df_cln = marketing_df.copy().dropna(axis=0)
+
+#change data type
+marketing_df_cln['Dt_Customer'] = pd.to_datetime(marketing_df['Dt_Customer'])
+marketing_df_cln['Year_Birth'] = marketing_df_cln['Year_Birth'].astype('int')
+marketing_df_cln['Kidhome'] = marketing_df_cln['Kidhome'].astype('int')
+marketing_df_cln['Teenhome'] = marketing_df_cln['Teenhome'].astype('int')
+marketing_df_cln['NumDealsPurchases'] = marketing_df_cln['NumDealsPurchases'].astype('int')
+marketing_df_cln['NumWebPurchases'] = marketing_df_cln['NumWebPurchases'].astype('int')
+marketing_df_cln['NumCatalogPurchases'] = marketing_df_cln['NumCatalogPurchases'].astype('int')
+marketing_df_cln['NumStorePurchases'] = marketing_df_cln['NumStorePurchases'].astype('int')
+marketing_df_cln['NumWebVisitsMonth'] = marketing_df_cln['NumWebVisitsMonth'].astype('int')
+
+#convert string in Income to float
+marketing_df_cln['Income'] = marketing_df_cln['Income'].str.replace('$', '')
+marketing_df_cln['Income'] = marketing_df_cln['Income'].str.replace(',', '')
+marketing_df_cln['Income'] = marketing_df_cln['Income'].astype('float')
+
+#change data type to bool
+bools = ['AcceptedCmp1', 'AcceptedCmp2', 'AcceptedCmp3', 'AcceptedCmp4', 'AcceptedCmp5', 'Complain', 'Response']
+for col in bools:
+  marketing_df_cln[col] = marketing_df_cln[col].astype('bool')
+
+#change data type to category
+marketing_df_cln['Education'] = marketing_df_cln['Education'].astype('category')
+marketing_df_cln['Marital_Status'] = marketing_df_cln['Marital_Status'].astype('category')
+marketing_df_cln['Country'] = marketing_df_cln['Country'].astype('category')
+
+#new features
+
+#age
+marketing_df_cln['Age'] = 2021 - marketing_df_cln['Year_Birth']
+
+#total purchases
+marketing_df_cln['Total_Purchases'] = marketing_df_cln['NumDealsPurchases'] + marketing_df_cln['NumWebPurchases'] + marketing_df_cln['NumCatalogPurchases'] + marketing_df_cln['NumStorePurchases']
+
+#total amount spent
+marketing_df_cln['Total_Amount_Spent'] = marketing_df_cln['MntWines'] + marketing_df_cln['MntFruits'] + marketing_df_cln['MntMeatProducts'] + marketing_df_cln['MntFishProducts'] + marketing_df_cln['MntSweetProducts'] + marketing_df_cln['MntGoldProds']
+
+#total amount spent per purchase
+marketing_df_cln['Total_Amount_Spent_Per_Purchase'] = marketing_df_cln['Total_Amount_Spent'] / marketing_df_cln['Total_Purchases']
+
+#total amount spent per visit
+marketing_df_cln['Total_Amount_Spent_Per_Visit'] = marketing_df_cln['Total_Amount_Spent'] / marketing_df_cln['NumWebVisitsMonth']
+
+#total amount spent per year
+marketing_df_cln['Total_Amount_Spent_Per_Year'] = marketing_df_cln['Total_Amount_Spent'] / (2021 - marketing_df_cln['Year_Birth'])
+
+#total amount spent per month
+marketing_df_cln['Total_Amount_Spent_Per_Month'] = marketing_df_cln['Total_Amount_Spent'] / (marketing_df_cln['Dt_Customer'].dt.month + (marketing_df_cln['Dt_Customer'].dt.year - 2021) * 12)
+
+#total amount spent per day
+marketing_df_cln['Total_Amount_Spent_Per_Day'] = marketing_df_cln['Total_Amount_Spent'] / (marketing_df_cln['Dt_Customer'].dt.day + (marketing_df_cln['Dt_Customer'].dt.month + (marketing_df_cln['Dt_Customer'].dt.year - 2021) * 12) * 30)
+
+#total children living in the household
+marketing_df_cln['Total_Children'] = marketing_df_cln['Kidhome'] + marketing_df_cln['Teenhome']
+
+#total amount spent per child
+marketing_df_cln['Total_Amount_Spent_Per_Child'] = marketing_df_cln['Total_Amount_Spent'] / marketing_df_cln['Total_Children']
+
+#parenthood status
+marketing_df_cln['Parenthood_Status'] = marketing_df_cln['Total_Children'].replace({0: "Childless", 1: "Single Parent", 2: "Dual Parent"})
+
+#education segmentation
+marketing_df_cln["Education"] = marketing_df_cln["Education"]\
+                      .replace({"Basic":"Undergraduate", "2n Cycle":"Undergraduate", "Graduation":"Graduate", 
+                                "Master":"Postgraduate", "PhD":"Postgraduate"})
+
+#generation segmentation
+conditions = [
+    marketing_df_cln['Year_Birth'].lt(1922),
+    marketing_df_cln['Year_Birth'].ge(1922) & marketing_df_cln['Year_Birth'].le(1927),
+    marketing_df_cln['Year_Birth'].ge(1928) & marketing_df_cln['Year_Birth'].le(1945),
+    marketing_df_cln['Year_Birth'].ge(1946) & marketing_df_cln['Year_Birth'].le(1964),
+    # marketing_df_cln['Year_Birth'].ge(1955) & marketing_df_cln['Year_Birth'].le(1964),
+    marketing_df_cln['Year_Birth'].ge(1965) & marketing_df_cln['Year_Birth'].le(1980),
+    marketing_df_cln['Year_Birth'].ge(1981) & marketing_df_cln['Year_Birth'].le(1996),
+    marketing_df_cln['Year_Birth'].ge(1997) & marketing_df_cln['Year_Birth'].le(2012),
+    marketing_df_cln['Year_Birth'].ge(2010) & marketing_df_cln['Year_Birth'].le(2025)
+]
+
+generations = ['Pre-WWII', 'WWII', 'Post-War', 'Boomers', 'Gen-X', 'Millenials', 'Gen-Z', 'Gen-Alpha']
+marketing_df_cln['generation'] = np.select(conditions, generations)
+
+#categorize income level into 6 segments based on quartiles
+marketing_df_cln['Income_Level'] = pd.qcut(marketing_df_cln['Income'], 6, labels=['Lowest', 'Lower', 'Low', 'High', 'Higher', 'Highest'])
+
+#total amount spent per income level, save to a new dataframe
+total_amount_spent_per_income_level = marketing_df_cln.groupby('Income_Level')['Total_Amount_Spent'].sum().reset_index()
+```
+
+```{python}
+plt.figure(figsize=(10,6))
+sns.heatmap(marketing_df.isna().transpose(),
+            cmap="YlGnBu",
+            cbar_kws={'label': 'Missing Data'})
+plt.title('Missing Values', fontsize=12)
+plt.xlabel('Row Index', fontsize = 10) 
+plt.ylabel('Columns', fontsize = 10)
+plt.show()
+```
